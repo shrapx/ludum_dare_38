@@ -18,6 +18,7 @@ public:
 	};
 	int vehicle = VEHICLE_CAR;
 	
+	sf::Vector2f pos;
 	sf::Vector2f pos_from;
 	sf::Vector2f pos_to;
 	sf::Sprite vehicle_sprite;
@@ -37,14 +38,14 @@ public:
 		
 	}
 	
-	void set_destination(int v, int t, const sf::Vector2f& pos)
+	void set_destination(int v, int t, const sf::Vector2f& p)
 	{
 		time_total = t;
 		time_left = t;
 		
 		set_vehicle(v);
 		
-		pos_to = pos;
+		pos_to = p;
 		
 		set_line();
 		
@@ -63,7 +64,8 @@ public:
 			
 			draw_line_to = amt*line.size();
 			
-			vehicle_sprite.setPosition(lerp(pos_from, pos_to, amt));
+			pos = lerp(pos_from, pos_to, amt);
+			vehicle_sprite.setPosition(pos);
 		}
 		else if (time_left > -time_fade)
 		{
@@ -75,10 +77,12 @@ public:
 			{
 				l.setFillColor({255,0,0,a});
 			}
+			pos = pos_to;
 		}
 		else
 		{
 			pos_from = pos_to;
+			pos = pos_from;
 			
 			traveling = false;
 		}
@@ -107,6 +111,7 @@ private:
 		
 		vehicle_sprite.setRotation(rot);
 		
+		line.clear();
 		for (int i = 0; i < num; ++i)
 		{
 			line.emplace_back(line_size);

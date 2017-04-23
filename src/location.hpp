@@ -15,7 +15,7 @@ public:
 	:
 		Sprite(texture, rectangle)
 	{
-		setOrigin(rectangle.width/2 , rectangle.height/2);
+		//setOrigin(rectangle.width/2 , rectangle.height/2);
 		setPosition(pos);
 	}
 };

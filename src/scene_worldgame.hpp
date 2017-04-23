@@ -114,7 +114,9 @@ class WorldGame : public Scene
 		
 		sf::Texture* loc_tex = asset.load_texture("data/locations.png");
 		
-		Location* loc_uk = add_location(*loc_tex, {340,125,36,34}, {188,68});
+		Location* loc_uk = add_location(*loc_tex, {373,131,38,39}, {373,177});
+		
+		add_location(*loc_tex, {206,177,38,74}, {206,177}); // USA west
 		
 		// agent
 		
@@ -133,13 +135,15 @@ class WorldGame : public Scene
 	
 	void update()
 	{
-		sf::Vector2f target = player->getPosition();
-		sf::Vector2f center = constrain({0.f, 0.f, 128.f, 128.f}, target);
+		//sf::Vector2f target = player->getPosition();
+		//sf::Vector2f center = constrain({0.f, 0.f, 128.f, 128.f}, travel->pos);
 		
-		view.setCenter(center);
+		sf::Vector2f target = (travel && travel->traveling) ? travel->pos : player->getPosition();
+		
+		view.setCenter(target);
 		
 		// mouse position set
-		sf::Vector2f pointer_pos = center + (sf::Vector2f{input.mouse}/ZOOM) - sf::Vector2f(ZOOM_WH, ZOOM_HH);
+		sf::Vector2f pointer_pos = target + (sf::Vector2f{input.mouse}/ZOOM) - sf::Vector2f(ZOOM_WH, ZOOM_HH);
 		mouse_pointer_sprite->setPosition(pointer_pos);
 		
 		if (click(input.get_command.at(0).at("click")))
@@ -183,8 +187,8 @@ class WorldGame : public Scene
 			{
 				//a->setColor({245,32,32});
 				//show_this_card = a->card.get();
-				
-				travel->set_destination(Travel::VEHICLE_CAR, 200, pos);
+				if (!travel->traveling)
+					travel->set_destination(Travel::VEHICLE_CAR, 200, pos);
 				return;
 			}
 		}
@@ -215,7 +219,7 @@ class WorldGame : public Scene
 		
 		//if (show_this_card) { render_texture.draw(*show_this_card); }
 		
-		for (auto& s : sprites  ) { render_texture.draw(*s); }
+		for (auto& s : sprites) { render_texture.draw(*s); }
 		
 		sf::RenderStates s;
 		s.transform *= view.getTransform();
