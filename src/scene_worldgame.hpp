@@ -4,7 +4,8 @@
 
 #include "scene.hpp"
 #include "agent.hpp"
-#include "card.hpp"
+#include "travel.hpp"
+#include "statmeter.hpp"
 
 #include <iostream>
 
@@ -18,11 +19,9 @@ class WorldGame : public Scene
 	
 	std::vector<std::unique_ptr<sf::Text>> texts;
 	
-	
 	sf::Font* font = nullptr;
 	sf::Sprite* mouse_pointer_sprite = nullptr;
 	sf::Sound* sound_click = nullptr;
-	
 	bool mouse_click = false;
 	bool click(bool click_in)
 	{
@@ -31,6 +30,7 @@ class WorldGame : public Scene
 			if (click_in)
 			{
 				mouse_click = true;
+				sound_click->play();
 				return true;
 			}
 		}
@@ -44,36 +44,29 @@ class WorldGame : public Scene
 	sf::Clock clock;
 	sf::Time next;
 	
-	uint clicked = 0;
-	
-	
 	std::vector<std::unique_ptr<Location>> locations;
 	std::vector<std::unique_ptr<Agent>> agents;
 	std::vector<std::unique_ptr<Mission>> missions;
 	std::vector<std::unique_ptr<effect_t>> active_effects;
 	
+	//std::vector<std::unique_ptr<StatMeter>> statmeters;
+	std::unique_ptr<StatMeter> statmeter;
+	
+	std::unique_ptr<Travel> travel;
 	
 	Agent* player = nullptr;
-	Card* show_this_card = nullptr;
 	
-	Location* add_location(Card* card, const sf::Texture& tex, const sf::IntRect& rect, const sf::Vector2f& pos)
+	Location* add_location(const sf::Texture& tex, const sf::IntRect& rect, const sf::Vector2f& pos)
 	{
-		locations.emplace_back(std::make_unique<Location>(card, tex, rect, pos));
+		locations.emplace_back(std::make_unique<Location>(tex, rect, pos));
 		Location* a = locations.back().get();
 		return a;
 	}
 	
-	Agent* add_agent(Card* card, const sf::Texture& tex, const sf::IntRect& rect, uint c, Location* loc)
+	Agent* add_agent(const sf::Texture& tex, const sf::IntRect& rect, uint c, Location* loc)
 	{
-		agents.emplace_back(std::make_unique<Agent>(card, tex, rect, c, loc));
+		agents.emplace_back(std::make_unique<Agent>(tex, rect, c, loc));
 		Agent* a = agents.back().get();
-		return a;
-	}
-	
-	Card* add_card(const sf::Font& f, const sf::Texture& tex, const sf::IntRect& rect, const sf::Vector2f& pos)
-	{
-		cards.emplace_back(std::make_unique<Card>(f, tex, rect, pos));
-		Card* a = cards.back().get();
 		return a;
 	}
 	
@@ -113,30 +106,27 @@ class WorldGame : public Scene
 		sf::Texture* bg_tex = asset.load_texture("data/map.png");
 		bgs.emplace_back(std::make_unique<sf::Sprite>(*bg_tex));
 		
-		// card
-		sf::Texture* cards_tex = asset.load_texture("data/cards.png");
-		
-		Card* card = add_card(*font, *cards_tex, {0,0,64,64}, {64,64});
-		
-		card->set_text("New Opportunity", "description");
-		
-		//card->add_choice( "one", [](){} );
-		
-		
-		//card->set_choices( {"one", "two", "three"} );
+		// travel vehicle display
+		sf::Texture* travel_tex = asset.load_texture("data/travel.png");
+		travel = std::make_unique<Travel>(*travel_tex);
 		
 		// location
 		
 		sf::Texture* loc_tex = asset.load_texture("data/locations.png");
 		
-		Location* loc_uk = add_location(card, *loc_tex, {340,125,36,34}, {188,68});
+		Location* loc_uk = add_location(*loc_tex, {340,125,36,34}, {188,68});
 		
 		// agent
 		
 		sf::Texture* agents_tex = asset.load_texture("data/agents.png");
 
-		player = add_agent(card, *agents_tex, {0,0,64,64}, Agent::TRAVEL_AGENT, loc_uk);
+		player = add_agent(*agents_tex, {0,0,64,64}, Agent::TRAVEL_AGENT, loc_uk);
 		
+		// fg / stats
+		
+		sf::Texture* stat_tex = asset.load_texture("data/statmeter.png");
+		
+		statmeter = std::make_unique<StatMeter>(*font, *stat_tex, sf::Vector2f{32,32}, "TestStat");
 	}
 	
 	void update()
@@ -152,71 +142,25 @@ class WorldGame : public Scene
 		
 		if (click(input.get_command.at(0).at("click")))
 		{
-			if (show_this_card)
-			{
-				int choice = show_this_card->click_card(pointer_pos);
-				
-				std::cout << choice << std::endl;
-				
-				if (choice > 0)
-				{
-					// process choice somehow
-				}
-				else
-				{
-					show_this_card = nullptr;
-					return;
-				}
-			}
-			else
-			{
-				// do we hit an active agent?
-				click_agents_and_locations(pointer_pos);
-			}
-			// do we hit a location?
-			
-			// what else
-			/*if (clicked < 3)
-			{
-				++clicked;
-				sound_click->play();
-			}
-			else
-			{
-				++persist.scene;
-				persist.scene_end = true;
-			}*/
+			look_for_click(pointer_pos);
 		}
+		
+		travel->update();
+		
+		update_effects();
+		
+		//float amt = 0.5f + (pointer_pos.x / ZOOM_W);
+		//std::cout << amt << std::endl;
+		statmeter->update(1.0f);
 	}
 	
-	void click_cards(const sf::Vector2f& pos)
+	void end_scene()
 	{
-		show_this_card->click_card(pos);
-		for (auto& a : agents)
-		{
-			if (a->getGlobalBounds().contains(pos))
-			{
-				//a->setColor({245,32,32});
-				
-				show_this_card = a->card.get();
-				return;
-			}
-		}
-		
-		for (auto& a : locations)
-		{
-			if (a->getGlobalBounds().contains(pos))
-			{
-				//a->setColor({245,32,32});
-				show_this_card = a->card.get();
-				return;
-			}
-		}
-		
-		// click must have been off the card
+		++persist.scene;
+		persist.scene_end = true;
 	}
 	
-	void click_agents_and_locations(const sf::Vector2f& pos)
+	void look_for_click(const sf::Vector2f& pos)
 	{
 		for (auto& a : agents)
 		{
@@ -224,7 +168,7 @@ class WorldGame : public Scene
 			{
 				///a->setColor({245,32,32});
 				
-				show_this_card = a->card.get();
+				//show_this_card = a->card.get();
 				return;
 			}
 		}
@@ -234,27 +178,44 @@ class WorldGame : public Scene
 			if (a->getGlobalBounds().contains(pos))
 			{
 				//a->setColor({245,32,32});
-				show_this_card = a->card.get();
+				//show_this_card = a->card.get();
+				
+				travel->set_destination(Travel::VEHICLE_CAR, 200, pos);
 				return;
 			}
 		}
 	}
 	
-	void update_interaction(stats_t& other)
+	void update_effects()
 	{
-		stats_t& me = persist.stats;
+		for (auto& e : active_effects)
+		{
+			if (e) e->update();
+		}
 		
+		active_effects.erase(std::remove_if(
+			active_effects.begin(),
+			active_effects.end(),
+			[](std::unique_ptr<effect_t>& e) {return !e || e->remove_me;}),
+			active_effects.end());
 	}
+	
 	
 	void render()
 	{
 		for (auto& b : bgs      ) { render_texture.draw(*b); }
+		render_texture.draw(*travel);
+		
 		for (auto& l : locations) { render_texture.draw(*l); }
 		for (auto& a : agents   ) { render_texture.draw(*a); }
 		
-		if (show_this_card) { render_texture.draw(*show_this_card); }
+		
+		
+		//if (show_this_card) { render_texture.draw(*show_this_card); }
 		
 		for (auto& s : sprites  ) { render_texture.draw(*s); }
+		
+		render_texture.draw(*statmeter);
 		
 		// draw with shader
 		/*if (night)

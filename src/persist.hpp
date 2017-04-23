@@ -37,14 +37,15 @@ struct effect_t
 	int factor_b = +1;
 	int countdown = 100;
 	bool early_exit = false;
+	bool remove_me = false;
 	//sf::Time duration;
 	
-	bool update()
+	void update()
 	{
 		a.stat[strategy_a] += factor_a;
 		b.stat[strategy_b] += factor_b;
 		--countdown;
-		return countdown < 0;
+		remove_me = countdown < 0;
 	}
 	// intelligence += everything
 	// ..CHARISMA > WILLPOWER > MONEY > CHARISMA..

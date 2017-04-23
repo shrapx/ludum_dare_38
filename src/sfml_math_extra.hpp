@@ -27,7 +27,7 @@ float dist(const sf::Vector2f& a, const sf::Vector2f& b)
 	return length(c);
 }
 
-sf::Vector2f lerp(sf::Vector2f a, sf::Vector2f b, float t)
+sf::Vector2f lerp(const sf::Vector2f& a, const sf::Vector2f& b, float t)
 {
 	return {a.x + t*(b.x-a.x), a.y + t*(b.y-a.y)};
 }
