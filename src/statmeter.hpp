@@ -12,23 +12,25 @@ public:
 	sf::Sprite cover;
 	sf::Sprite meter;
 	
-	StatMeter(const sf::Font& font, const sf::Texture &texture, const std::string& n) : cover(texture), meter(texture)
+	StatMeter(const sf::Font& font, const sf::Texture &texture, const std::string& n)
+	:
+		cover(texture), meter(texture)
 	{
 		
 
 		text.setString(n);
 		text.setFont(font);
-		text.setCharacterSize(9);
+		text.setCharacterSize(10);
 		text.setColor( {0,51,8,255} );
 		
 		num.setFont(font);
-		num.setCharacterSize(9);
+		num.setCharacterSize(10);
 		num.setColor( {0,51,8,255} );
 		
 		cover.setTextureRect(  {64, 16, 160, 16} );
 		
-		text.setOrigin( {-100, -6} );
-		num.setOrigin( {-75, -6} );
+		text.setOrigin( {-100, -5} );
+		num.setOrigin( {-75, -5} );
 		meter.setOrigin({-3,-1-6});
 	}
 
@@ -46,6 +48,7 @@ private:
 		
 		target.draw(meter, states);
 		target.draw(cover, states);
+		
 		target.draw(num, states);
 		target.draw(text, states);
 	}

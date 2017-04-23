@@ -113,14 +113,33 @@ class WorldGame : public Scene
 		
 		// location
 		
-		sf::Texture* loc_tex = asset.load_texture("data/locations.png");
+		sf::Texture* loc_tex1 = asset.load_texture("data/locations1.png");
+		sf::Texture* loc_tex2 = asset.load_texture("data/locations2.png");
 		
-		Location* loc_uk = add_location(*loc_tex, {373,131,38,39}, {29,35}); // UK
+		Location* loc_uk = add_location(*loc_tex1, {373,131,38,39}, {29,35}); // UK
 		
 		//travel->pos = {373,177};
 		travel->pos = loc_uk->sprite.getPosition();
-		add_location(*loc_tex, {206,177,38,74}, {20,24}); // USA west
-		add_location(*loc_tex, {101,172,36,62}, {11,24}); // USA east
+		add_location(*loc_tex1, {206,177,38,74}, {20,24}); // USA west
+		add_location(*loc_tex1, {101,172,36,62}, {11,24}); // USA east
+		
+		// todo: order by size
+		
+		add_location(*loc_tex1, {538,240,24,17}, {16,6}); // UAE
+		add_location(*loc_tex1, {696,257,12,10}, {7,5}); // HK
+		
+		add_location(*loc_tex2, {660,281,34,22}, {24,13}); // SINGAPORE
+		
+		add_location(*loc_tex2, {733,165,59,69}, {37,48}); // JAPAN
+		add_location(*loc_tex2, {381,56,126,153}, {40,114}); // EURO
+		add_location(*loc_tex2, {606,168,127,93}, {88,24}); // CHINA
+		add_location(*loc_tex1, {484,29,383,155}, {35,91}); // USSR
+		
+		
+		/*
+		add_location(*loc_tex2, {}, {}); //
+		*/
+		
 		
 		// agent
 		

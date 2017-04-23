@@ -16,8 +16,11 @@ public:
 	const sf::Texture &texture;
 	
 	std::array<std::unique_ptr<StatMeter>, stats_t::COUNT> meters;
-	
-	UI(const Persist& p, const sf::Font& f, const sf::Texture &t) : persist(p), font(f), texture(t)
+	sf::Sprite endcap;
+		
+
+		
+	UI(const Persist& p, const sf::Font& f, const sf::Texture &t) : persist(p), font(f), texture(t), endcap(texture)
 	{
 		//meters.emplace_back();
 		meters[stats_t::CHARISMA] = std::make_unique<StatMeter>(f, t, "CHARISMA");
@@ -34,6 +37,8 @@ public:
 			m->setPosition(-ZOOM_WH,y);
 			y+= 16;
 		}
+		endcap.setPosition(-ZOOM_WH, y);
+		endcap.setTextureRect(  {64, 32, 160, 16} );
 	}
 	
 	int counter = 0;
@@ -59,6 +64,7 @@ private:
 		
 		for (auto& s : meters) { target.draw(*s, states); }
 		
+		target.draw(endcap, states);
 		//target.draw(*statmeter, states);
 		
 	}
