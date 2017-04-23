@@ -17,7 +17,6 @@ public:
 		cover(texture), meter(texture)
 	{
 		
-
 		text.setString(n);
 		text.setFont(font);
 		text.setCharacterSize(10);

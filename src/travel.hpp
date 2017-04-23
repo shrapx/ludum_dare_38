@@ -7,17 +7,10 @@ class Travel : public sf::Drawable, public sf::Transformable
 {
 public:
 
-	enum 
-	{
-		VEHICLE_NONE = 0,
-		VEHICLE_PLANE,
-		VEHICLE_CAR,
-		VEHICLE_BUS,
-		VEHICLE_BOAT,
-		VEHICLE_COUNT
-	};
 	int vehicle = VEHICLE_CAR;
 	
+	Location* from;
+	Location* to;
 	sf::Vector2f pos;
 	sf::Vector2f pos_from;
 	sf::Vector2f pos_to;
@@ -38,15 +31,31 @@ public:
 		
 	}
 	
-	void set_destination(int v, int t, const sf::Vector2f& p)
+	void set_destination(Location* f, Location* t)
 	{
-		time_total = t;
-		time_left = t + time_fade;
-		
-		set_vehicle(v);
+		from = f;
+		to = t;
+		int v = f->get_mode_of_transport(t);
 		
 		pos_from = pos;
-		pos_to = p;
+		pos_to = t->sprite.getPosition();
+		
+		int tmod = 1;
+		
+		switch(v)
+		{
+			case VEHICLE_PLANE: tmod = 1; break;
+			case VEHICLE_BOAT:  tmod = 2; break;
+			case VEHICLE_CAR:   tmod = 3; break;
+			case VEHICLE_BUS:   tmod = 4; break;
+		}
+		
+		int d = dist(pos_from, pos_to) * tmod;
+		
+		time_total = d;
+		time_left = d + time_fade;
+		
+		set_vehicle(v);
 		
 		vehicle_sprite.setOrigin({60,32});
 		vehicle_sprite.setPosition(pos_from);

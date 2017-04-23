@@ -3,6 +3,16 @@
 
 #include <iostream>
 
+enum 
+{
+	VEHICLE_NONE = 0,
+	VEHICLE_PLANE,
+	VEHICLE_CAR,
+	VEHICLE_BUS,
+	VEHICLE_BOAT,
+	VEHICLE_COUNT
+};
+	
 class stat_t
 {
 public:

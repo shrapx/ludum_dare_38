@@ -116,25 +116,37 @@ class WorldGame : public Scene
 		sf::Texture* loc_tex1 = asset.load_texture("data/locations1.png");
 		sf::Texture* loc_tex2 = asset.load_texture("data/locations2.png");
 		
-		Location* loc_uk = add_location(*loc_tex1, {373,131,38,39}, {29,35}); // UK
+		Location* UK = add_location(*loc_tex1, {373,131,38,39}, {29,35}); // UK
 		
 		//travel->pos = {373,177};
-		travel->pos = loc_uk->sprite.getPosition();
-		add_location(*loc_tex1, {206,177,38,74}, {20,24}); // USA west
-		add_location(*loc_tex1, {101,172,36,62}, {11,24}); // USA east
 		
-		// todo: order by size
 		
-		add_location(*loc_tex1, {538,240,24,17}, {16,6}); // UAE
-		add_location(*loc_tex1, {696,257,12,10}, {7,5}); // HK
+		Location* USW = add_location(*loc_tex1, {206,177,38,74}, {20,24}); // USA west
+		Location* USE = add_location(*loc_tex1, {101,172,36,62}, {11,24}); // USA east
+		Location* UAE = add_location(*loc_tex1, {538,240,24,17}, {16,6}); // UAE
+		Location* HK  = add_location(*loc_tex1, {696,257,12,10}, {7,5}); // HK
+		Location* SIN = add_location(*loc_tex2, {660,281,34,22}, {24,13}); // SINGAPORE
+		Location* JAP = add_location(*loc_tex2, {733,165,59,69}, {37,48}); // JAPAN
+		Location* EUR = add_location(*loc_tex2, {381,56,126,153}, {40,114}); // EURO
+		Location* CHI = add_location(*loc_tex2, {606,168,127,93}, {88,24}); // CHINA
+		Location* RUS = add_location(*loc_tex1, {484,29,383,155}, {35,91}); // USSR
 		
-		add_location(*loc_tex2, {660,281,34,22}, {24,13}); // SINGAPORE
+		// car
+		USW->connect_road(USE);
+		SIN->connect_road(CHI);
+		EUR->connect_road(RUS);
+		RUS->connect_road(CHI);
+		            
+		// boat
+		USE->connect_sea(UK);
+		USE->connect_sea(EUR);
+		UK ->connect_sea(EUR);
+		JAP->connect_sea(CHI);
+		HK ->connect_sea(CHI);
+		HK ->connect_sea(SIN);
 		
-		add_location(*loc_tex2, {733,165,59,69}, {37,48}); // JAPAN
-		add_location(*loc_tex2, {381,56,126,153}, {40,114}); // EURO
-		add_location(*loc_tex2, {606,168,127,93}, {88,24}); // CHINA
-		add_location(*loc_tex1, {484,29,383,155}, {35,91}); // USSR
-		
+		// start location
+		travel->pos = UK->sprite.getPosition();
 		
 		/*
 		add_location(*loc_tex2, {}, {}); //
@@ -145,8 +157,8 @@ class WorldGame : public Scene
 		
 		sf::Texture* agents_tex = asset.load_texture("data/agents.png");
 
-		player = add_agent(*agents_tex, {0,0,64,64}, Agent::TRAVEL_AGENT, loc_uk);
-		
+		player = add_agent(*agents_tex, {0,0,64,64}, Agent::TRAVEL_AGENT, UK);
+		player->loc = UK;
 		// fg / stats
 		
 		sf::Texture* stat_tex = asset.load_texture("data/statmeter.png");
@@ -186,6 +198,7 @@ class WorldGame : public Scene
 			//
 			player->sprite.setPosition(travel->pos);
 			player->traveling = false;
+			player->loc = travel->to;
 		}
 		else if (!traveling && travel->traveling)
 		{
@@ -204,13 +217,16 @@ class WorldGame : public Scene
 	
 	void look_for_click(const sf::Vector2f& pos)
 	{
-		for (auto& a : agents)
+		// replace with options around character
+		/*for (auto& a : agents)
 		{
 			if (a->sprite.getGlobalBounds().contains(pos))
 			{
 				return;
 			}
-		}
+		}*/
+		
+		// options around selected location before travel ?
 		
 		for (auto& a : locations)
 		{
@@ -218,7 +234,7 @@ class WorldGame : public Scene
 			{
 				if (!travel->traveling)
 				{
-					travel->set_destination(Travel::VEHICLE_CAR, 100, pos);
+					travel->set_destination(player->loc, a.get());
 				}
 				return;
 			}
