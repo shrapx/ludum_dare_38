@@ -29,7 +29,7 @@ public:
 	
 	// time period
 	int time_total = 0;
-	int time_fade = 50;
+	int time_fade = FADE;
 	int time_left = -time_fade;
 	bool traveling = false;
 	
@@ -41,11 +41,14 @@ public:
 	void set_destination(int v, int t, const sf::Vector2f& p)
 	{
 		time_total = t;
-		time_left = t;
+		time_left = t + time_fade;
 		
 		set_vehicle(v);
 		
+		pos_from = pos;
 		pos_to = p;
+		
+		vehicle_sprite.setPosition(pos_from);
 		
 		set_line();
 		
@@ -58,7 +61,13 @@ public:
 	{
 		if (!traveling) return;
 		
-		if (time_left > 0)
+		if ( time_left > time_total) // fade in
+		{
+			sf::Uint8 a = 255 - float((1.0f/time_fade) * (time_left-time_total)) * 255;
+			
+			vehicle_sprite.setColor( {255,255,255,a} );
+		}
+		else if (time_left > 0) // lerp
 		{
 			float amt = float(1.0f/time_total) * (time_total-time_left);
 			
@@ -67,7 +76,7 @@ public:
 			pos = lerp(pos_from, pos_to, amt);
 			vehicle_sprite.setPosition(pos);
 		}
-		else if (time_left > -time_fade)
+		else if (time_left > -time_fade) // fade out
 		{
 			sf::Uint8 a = (1.0f/time_fade) * (time_left+time_fade) * 255;
 			
@@ -79,10 +88,11 @@ public:
 			}
 			pos = pos_to;
 		}
-		else
+		else // end
 		{
-			pos_from = pos_to;
-			pos = pos_from;
+			draw_line_to = 0;
+			pos = pos_to;
+			pos = pos;
 			
 			traveling = false;
 		}
@@ -103,8 +113,8 @@ private:
 	
 	void set_line()
 	{
-		sf::Vector2f diff =  {pos_to.x - pos_from.x, pos_to.y - pos_from.y};
-		float d = length(diff);//(pos_from, pos_to);
+		sf::Vector2f diff =  {pos_to.x - pos.x, pos_to.y - pos.y};
+		float d = length(diff);//(pos, pos_to);
 		int num = d / (2*line_size.x);
 		
 		float rot =  atan2(diff.y, diff.x) * (180.f/M_PI);
@@ -116,7 +126,7 @@ private:
 		{
 			line.emplace_back(line_size);
 			sf::RectangleShape& r = line.back();
-			r.setPosition( lerp(pos_from, pos_to, 1.0f/num * i) );
+			r.setPosition( lerp(pos, pos_to, 1.0f/num * i) );
 			r.setRotation( rot );
 		}
 	}

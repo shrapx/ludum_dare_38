@@ -3,21 +3,39 @@
 
 #include "mission.hpp"
 
-class Location : public sf::Sprite
+class Location : public sf::Drawable//, public sf::Transformable
 {
-	using Sprite::Sprite;
-
 public:
 
+	sf::Sprite sprite;
+	
 	Mission* card = nullptr;
 	
-	Location(const sf::Texture &texture, const sf::IntRect &rectangle, const sf::Vector2f& pos)
+	bool enabled = true;
+	bool visited = false;
+	
+	Location(const sf::Texture &texture, const sf::IntRect &rectangle, const sf::Vector2f& origin)
 	:
-		Sprite(texture, rectangle)
+		sprite(texture, rectangle)
 	{
-		//setOrigin(rectangle.width/2 , rectangle.height/2);
-		setPosition(pos);
+		sprite.setOrigin(origin);
+		
+		//sf::Vector2f half = { -rectangle.width/2 , -rectangle.height/2 };
+		sprite.setPosition(rectangle.left + origin.x, rectangle.top + origin.y);
+		sprite.setColor( {255,255,128,255});
 	}
+	
+private:
+
+	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const
+	{
+		if (!enabled) return;
+		
+		//states.transform *= getTransform();
+		
+		target.draw(sprite, states);
+	}
+
 };
 
 #endif

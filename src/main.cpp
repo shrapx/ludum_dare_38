@@ -13,6 +13,8 @@
 #define ZOOM_WQ ZOOM_W/4
 #define ZOOM_HQ ZOOM_H/4
 
+#define FADE 30
+
 #include "sfml_math_extra.hpp"
 
 #include "timer.hpp"

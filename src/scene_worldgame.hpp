@@ -51,10 +51,10 @@ class WorldGame : public Scene
 	
 	//std::vector<std::unique_ptr<StatMeter>> statmeters;
 	std::unique_ptr<StatMeter> statmeter;
-	
 	std::unique_ptr<Travel> travel;
-	
 	Agent* player = nullptr;
+	
+	bool traveling = false;
 	
 	Location* add_location(const sf::Texture& tex, const sf::IntRect& rect, const sf::Vector2f& pos)
 	{
@@ -114,9 +114,12 @@ class WorldGame : public Scene
 		
 		sf::Texture* loc_tex = asset.load_texture("data/locations.png");
 		
-		Location* loc_uk = add_location(*loc_tex, {373,131,38,39}, {373,177});
+		Location* loc_uk = add_location(*loc_tex, {373,131,38,39}, {29,35}); // UK
 		
-		add_location(*loc_tex, {206,177,38,74}, {206,177}); // USA west
+		//travel->pos = {373,177};
+		travel->pos = loc_uk->sprite.getPosition();
+		add_location(*loc_tex, {206,177,38,74}, {20,24}); // USA west
+		add_location(*loc_tex, {101,172,36,62}, {11,24}); // USA east
 		
 		// agent
 		
@@ -130,15 +133,11 @@ class WorldGame : public Scene
 		
 		statmeter = std::make_unique<StatMeter>(*font, *stat_tex, "TestStat");
 		
-		//statmeter->setPosition(sf::Vector2f{32,32});
 	}
 	
 	void update()
 	{
-		//sf::Vector2f target = player->getPosition();
-		//sf::Vector2f center = constrain({0.f, 0.f, 128.f, 128.f}, travel->pos);
-		
-		sf::Vector2f target = (travel && travel->traveling) ? travel->pos : player->getPosition();
+		sf::Vector2f target = (traveling) ? travel->pos : player->sprite.getPosition();
 		
 		view.setCenter(target);
 		
@@ -152,14 +151,23 @@ class WorldGame : public Scene
 		}
 		
 		travel->update();
+		player->update();
 		
 		update_effects();
 		
-		//float amt = 0.5f + (pointer_pos.x / ZOOM_W);
-		//std::cout << amt << std::endl;
-		
+		if (traveling && !travel->traveling)
+		{
+			traveling = false;
+			//
+			player->sprite.setPosition(travel->pos);
+			player->traveling = false;
+		}
+		else if (!traveling && travel->traveling)
+		{
+			traveling = true;
+			player->traveling = true;
+		}
 		statmeter->update(1.0f);
-		
 	}
 	
 	void end_scene()
@@ -172,23 +180,20 @@ class WorldGame : public Scene
 	{
 		for (auto& a : agents)
 		{
-			if (a->getGlobalBounds().contains(pos))
+			if (a->sprite.getGlobalBounds().contains(pos))
 			{
-				///a->setColor({245,32,32});
-				
-				//show_this_card = a->card.get();
 				return;
 			}
 		}
 		
 		for (auto& a : locations)
 		{
-			if (a->getGlobalBounds().contains(pos))
+			if (a->sprite.getGlobalBounds().contains(pos))
 			{
-				//a->setColor({245,32,32});
-				//show_this_card = a->card.get();
 				if (!travel->traveling)
-					travel->set_destination(Travel::VEHICLE_CAR, 200, pos);
+				{
+					travel->set_destination(Travel::VEHICLE_CAR, 100, pos);
+				}
 				return;
 			}
 		}
@@ -212,12 +217,11 @@ class WorldGame : public Scene
 	void render()
 	{
 		for (auto& b : bgs      ) { render_texture.draw(*b); }
+		for (auto& l : locations) { render_texture.draw(*l); }
+		
 		render_texture.draw(*travel);
 		
-		for (auto& l : locations) { render_texture.draw(*l); }
 		for (auto& a : agents   ) { render_texture.draw(*a); }
-		
-		//if (show_this_card) { render_texture.draw(*show_this_card); }
 		
 		for (auto& s : sprites) { render_texture.draw(*s); }
 		
