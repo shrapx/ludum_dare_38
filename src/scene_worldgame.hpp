@@ -126,7 +126,9 @@ class WorldGame : public Scene
 		
 		sf::Texture* stat_tex = asset.load_texture("data/statmeter.png");
 		
-		statmeter = std::make_unique<StatMeter>(*font, *stat_tex, sf::Vector2f{32,32}, "TestStat");
+		statmeter = std::make_unique<StatMeter>(*font, *stat_tex, "TestStat");
+		
+		//statmeter->setPosition(sf::Vector2f{32,32});
 	}
 	
 	void update()
@@ -151,7 +153,9 @@ class WorldGame : public Scene
 		
 		//float amt = 0.5f + (pointer_pos.x / ZOOM_W);
 		//std::cout << amt << std::endl;
+		
 		statmeter->update(1.0f);
+		
 	}
 	
 	void end_scene()
@@ -209,13 +213,13 @@ class WorldGame : public Scene
 		for (auto& l : locations) { render_texture.draw(*l); }
 		for (auto& a : agents   ) { render_texture.draw(*a); }
 		
-		
-		
 		//if (show_this_card) { render_texture.draw(*show_this_card); }
 		
 		for (auto& s : sprites  ) { render_texture.draw(*s); }
 		
-		render_texture.draw(*statmeter);
+		sf::RenderStates s;
+		s.transform *= view.getTransform();
+		render_texture.draw(*statmeter, s);
 		
 		// draw with shader
 		/*if (night)
