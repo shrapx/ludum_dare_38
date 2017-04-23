@@ -48,6 +48,7 @@ public:
 		pos_from = pos;
 		pos_to = p;
 		
+		vehicle_sprite.setOrigin({60,32});
 		vehicle_sprite.setPosition(pos_from);
 		
 		set_line();

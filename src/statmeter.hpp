@@ -8,35 +8,35 @@ class StatMeter : public sf::Drawable, public sf::Transformable
 public:
 	
 	sf::Text text;
-	sf::Sprite stat;
+	sf::Text num;
+	sf::Sprite cover;
 	sf::Sprite meter;
 	
-	StatMeter(const sf::Font& font, const sf::Texture &texture, const std::string& n) : stat(texture), meter(texture)
+	StatMeter(const sf::Font& font, const sf::Texture &texture, const std::string& n) : cover(texture), meter(texture)
 	{
-		text.setFont(font);
+		
+
 		text.setString(n);
-		text.setCharacterSize(8);
+		text.setFont(font);
+		text.setCharacterSize(9);
 		text.setColor( {0,51,8,255} );
 		
-		stat.setTextureRect(  {64, 0, 128, 32} );
+		num.setFont(font);
+		num.setCharacterSize(9);
+		num.setColor( {0,51,8,255} );
 		
-		text.setOrigin( {-70, -22} );
-		meter.setOrigin({-3,-1-23});
+		cover.setTextureRect(  {64, 16, 160, 16} );
+		
+		text.setOrigin( {-100, -6} );
+		num.setOrigin( {-75, -6} );
+		meter.setOrigin({-3,-1-6});
 	}
 
-	void update(float amt)
+	void update(int iamt, float amt)
 	{
-		meter.setTextureRect( {3, int(amt*249), 58, 8} );
+		num.setString( std::to_string(iamt) );
+		meter.setTextureRect( {3, int(amt*(512-8)), 58, 8} );
 	}
-	
-	/*void setPosition(const sf::Vector2f& pos)
-	{
-		setPosition(pos);
-		
-		text.setPosition(pos);
-		stat.setPosition(pos);
-		meter.setPosition(pos);
-	}*/
 	
 private:
 	
@@ -45,7 +45,8 @@ private:
 		states.transform *= getTransform();
 		
 		target.draw(meter, states);
-		target.draw(stat, states);
+		target.draw(cover, states);
+		target.draw(num, states);
 		target.draw(text, states);
 	}
 };

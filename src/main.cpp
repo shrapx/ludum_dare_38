@@ -42,8 +42,8 @@ int main()
 	window.setKeyRepeatEnabled(false);
 	window.setMouseCursorVisible(false);
 	
-	Persist persist;
 	sx::timer t;
+	Persist persist;
 	std::unique_ptr<Scene> scene;
 	bool the_terminator = false;
 	

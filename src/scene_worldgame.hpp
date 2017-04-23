@@ -5,7 +5,7 @@
 #include "scene.hpp"
 #include "agent.hpp"
 #include "travel.hpp"
-#include "statmeter.hpp"
+#include "ui.hpp"
 
 #include <iostream>
 
@@ -50,7 +50,8 @@ class WorldGame : public Scene
 	std::vector<std::unique_ptr<effect_t>> active_effects;
 	
 	//std::vector<std::unique_ptr<StatMeter>> statmeters;
-	std::unique_ptr<StatMeter> statmeter;
+	std::unique_ptr<UI> ui;
+	
 	std::unique_ptr<Travel> travel;
 	Agent* player = nullptr;
 	
@@ -131,7 +132,9 @@ class WorldGame : public Scene
 		
 		sf::Texture* stat_tex = asset.load_texture("data/statmeter.png");
 		
-		statmeter = std::make_unique<StatMeter>(*font, *stat_tex, "TestStat");
+		ui = std::make_unique<UI>(persist, *font, *stat_tex);
+		//statmeter = std::make_unique<StatMeter>(*font, *stat_tex, "TestStat");
+		//statmeter->setPosition(0,0)
 		
 	}
 	
@@ -140,6 +143,9 @@ class WorldGame : public Scene
 		sf::Vector2f target = (traveling) ? travel->pos : player->sprite.getPosition();
 		
 		view.setCenter(target);
+		
+		ui->setPosition(target);
+		ui->update();
 		
 		// mouse position set
 		sf::Vector2f pointer_pos = target + (sf::Vector2f{input.mouse}/ZOOM) - sf::Vector2f(ZOOM_WH, ZOOM_HH);
@@ -167,7 +173,8 @@ class WorldGame : public Scene
 			traveling = true;
 			player->traveling = true;
 		}
-		statmeter->update(1.0f);
+		
+		//statmeter->update(1.0f);
 	}
 	
 	void end_scene()
@@ -225,9 +232,7 @@ class WorldGame : public Scene
 		
 		for (auto& s : sprites) { render_texture.draw(*s); }
 		
-		sf::RenderStates s;
-		s.transform *= view.getTransform();
-		render_texture.draw(*statmeter, s);
+		render_texture.draw(*ui);
 		
 		// draw with shader
 		/*if (night)
