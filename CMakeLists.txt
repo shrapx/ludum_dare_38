@@ -27,6 +27,15 @@ set(SRC
 	src/asset.hpp
 	src/scene.hpp
 	
+	src/travel.hpp
+	src/location.hpp
+	src/agent.hpp
+	src/scene_worldgame.hpp
+	src/statmeter.hpp
+	src/mission.hpp
+	src/ui.hpp
+	src/transport_button.hpp
+	
 	src/main.cpp
 )
 

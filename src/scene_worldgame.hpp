@@ -6,7 +6,7 @@
 #include "agent.hpp"
 #include "travel.hpp"
 #include "ui.hpp"
-#include "radial.hpp"
+#include "transport_button.hpp"
 
 #include <iostream>
 
@@ -60,8 +60,8 @@ class WorldGame : public Scene
 	std::vector<std::unique_ptr<Mission>> missions;
 	std::vector<std::unique_ptr<effect_t>> active_effects;
 	
-	std::vector<std::unique_ptr<RadialButton>> travel_buttons;
-	//std::vector<std::unique_ptr<RadialButton>> buttons;
+	std::vector<std::unique_ptr<TransportButton>> travel_buttons;
+	//std::vector<std::unique_ptr<TransportButton>> buttons;
 	
 	Location* to_loc = nullptr;
 	
@@ -131,10 +131,10 @@ class WorldGame : public Scene
 		sf::Texture* buttons_tex = asset.load_texture("data/buttons.png");
 		
 		
-		travel_buttons.emplace_back(std::make_unique<RadialButton>(*buttons_tex, sf::IntRect{  0,  0,32,32}, VEHICLE_CAR));
-		travel_buttons.emplace_back(std::make_unique<RadialButton>(*buttons_tex, sf::IntRect{ 32,  0,32,32}, VEHICLE_BUS));
-		travel_buttons.emplace_back(std::make_unique<RadialButton>(*buttons_tex, sf::IntRect{ 64,  0,32,32}, VEHICLE_BOAT));
-		travel_buttons.emplace_back(std::make_unique<RadialButton>(*buttons_tex, sf::IntRect{ 96,  0,32,32}, VEHICLE_PLANE));
+		travel_buttons.emplace_back(std::make_unique<TransportButton>(*buttons_tex, sf::IntRect{  0,  0,32,32}, VEHICLE_CAR));
+		travel_buttons.emplace_back(std::make_unique<TransportButton>(*buttons_tex, sf::IntRect{ 32,  0,32,32}, VEHICLE_BUS));
+		travel_buttons.emplace_back(std::make_unique<TransportButton>(*buttons_tex, sf::IntRect{ 64,  0,32,32}, VEHICLE_BOAT));
+		travel_buttons.emplace_back(std::make_unique<TransportButton>(*buttons_tex, sf::IntRect{ 96,  0,32,32}, VEHICLE_PLANE));
 		
 		// location
 		
@@ -142,23 +142,22 @@ class WorldGame : public Scene
 		sf::Texture* loc_tex2 = asset.load_texture("data/locations2.png");
 		
 		Location* UK  = add_location(*loc_tex1, {373,131,38,39}, {29,35}); // UK
-		Location* USW = add_location(*loc_tex1, {206,177,38,74}, {20,24}); // USA west
-		Location* USE = add_location(*loc_tex1, {101,172,36,62}, {11,24}); // USA east
 		Location* UAE = add_location(*loc_tex1, {538,240,24,17}, {16,6}); // UAE
 		Location* HK  = add_location(*loc_tex1, {696,257,12,10}, {7,5}); // HK
 		Location* SIN = add_location(*loc_tex2, {660,281,34,22}, {24,13}); // SINGAPORE
 		Location* JAP = add_location(*loc_tex2, {733,165,59,69}, {37,48}); // JAPAN
+		
 		Location* EUR = add_location(*loc_tex2, {381,56,126,153}, {40,114}); // EURO
 		Location* CHI = add_location(*loc_tex2, {606,168,127,93}, {88,24}); // CHINA
 		Location* RUS = add_location(*loc_tex1, {484,29,383,155}, {35,91}); // USSR
+		Location* USW = add_location(*loc_tex1, {101,172,36,62}, {11,24}); // USA west
+		Location* USE = add_location(*loc_tex1, {206,177,38,74}, {20,24}); // USA east
 		
-		// car
 		USW->connect_road(USE);
 		SIN->connect_road(CHI);
 		EUR->connect_road(RUS);
 		RUS->connect_road(CHI);
 		            
-		// boat
 		USE->connect_sea(UK);
 		USE->connect_sea(EUR);
 		UK ->connect_sea(EUR);
@@ -168,17 +167,23 @@ class WorldGame : public Scene
 		
 		// start location
 		travel->pos = UK->sprite.getPosition();
-		
-		/*
-		add_location(*loc_tex2, {}, {}); //
-		*/
-		
+
 		// agent
 		
 		sf::Texture* agents_tex = asset.load_texture("data/agents.png");
-
-		player = add_agent(*agents_tex, {0,0,64,64}, Agent::TRAVEL_AGENT, UK);
+		
+		int ax = 64;
+		agents.emplace_back(std::make_unique<Agent>( *agents_tex, sf::IntRect{0,0,64,64}, Agent::TRAVEL_AGENT, UK ));
+		player = agents.back().get();
 		player->loc = UK;
+		
+		agents.emplace_back(std::make_unique<Agent>( *agents_tex, sf::IntRect{ax*1,0,64,64}, Agent::TRAVEL_AGENT, USE ));
+		agents.emplace_back(std::make_unique<Agent>( *agents_tex, sf::IntRect{ax*2,0,64,64}, Agent::TRAVEL_AGENT, EUR ));
+		agents.emplace_back(std::make_unique<Agent>( *agents_tex, sf::IntRect{ax*3,0,64,64}, Agent::TRAVEL_AGENT, JAP ));
+		agents.emplace_back(std::make_unique<Agent>( *agents_tex, sf::IntRect{ax*4,0,64,64}, Agent::TRAVEL_AGENT, RUS ));
+		agents.emplace_back(std::make_unique<Agent>( *agents_tex, sf::IntRect{ax*5,0,64,64}, Agent::TRAVEL_AGENT, SIN ));
+		agents.emplace_back(std::make_unique<Agent>( *agents_tex, sf::IntRect{ax*6,0,64,64}, Agent::TRAVEL_AGENT, CHI ));
+		agents.emplace_back(std::make_unique<Agent>( *agents_tex, sf::IntRect{ax*7,0,64,64}, Agent::TRAVEL_AGENT, HK ));
 		
 		// fg / stats
 		sf::Texture* stat_tex = asset.load_texture("data/statmeter.png");
@@ -268,7 +273,11 @@ class WorldGame : public Scene
 		}
 		
 		travel->update();
-		player->update();
+		
+		for (auto& a : agents)
+		{
+			a->update(traveling, player->loc);
+		}
 		
 		for (auto& b : travel_buttons)
 		{
@@ -282,14 +291,14 @@ class WorldGame : public Scene
 			traveling = false;
 			//
 			player->sprite.setPosition(travel->pos);
-			player->traveling = false;
+			//player->traveling = false;
 			player->loc = travel->to;
 			
 		}
 		else if (!traveling && travel->traveling)
 		{
 			traveling = true;
-			player->traveling = true;
+			//player->traveling = true;
 		}
 		
 		//statmeter->update(1.0f);
@@ -321,12 +330,14 @@ class WorldGame : public Scene
 		for (auto& b : bgs      ) { render_texture.draw(*b); }
 		for (auto& l : locations) { render_texture.draw(*l); }
 		
-		render_texture.draw(*travel);
-		
 		for (auto& a : agents   ) { render_texture.draw(*a); }
 		
-		for (auto& s : sprites) { render_texture.draw(*s); }
+		render_texture.draw(*travel);
+		
 		for (auto& b : travel_buttons) { render_texture.draw(*b); }
+		
+		// mouse
+		for (auto& s : sprites) { render_texture.draw(*s); }
 		
 		render_texture.draw(*ui);
 		

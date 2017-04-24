@@ -29,13 +29,14 @@ public:
 	{
 		switch (val)
 		{
-			case VEHICLE_CAR:  return can_car(other);
-			case VEHICLE_BOAT: return can_boat(other);
+			case VEHICLE_CAR:
+			case VEHICLE_BUS:  return can_road(other);
+			case VEHICLE_BOAT: return can_sea(other);
 			case VEHICLE_PLANE: return true;
 		}
 	}
 	
-	bool can_car(Location* other) const
+	bool can_road(Location* other) const
 	{
 		for (auto& r : roads)
 		{
@@ -44,7 +45,7 @@ public:
 		return false;
 	}
 	
-	bool can_boat(Location* other) const
+	bool can_sea(Location* other) const
 	{
 		for (auto& s : seas)
 		{
@@ -55,8 +56,8 @@ public:
 	
 	int get_mode_of_transport(Location* other) const
 	{
-		if (can_car(other)) return VEHICLE_CAR;
-		if (can_boat(other)) return VEHICLE_BOAT;
+		if (can_road(other)) return VEHICLE_CAR;
+		if (can_sea(other)) return VEHICLE_BOAT;
 		return VEHICLE_PLANE;
 	}
 	

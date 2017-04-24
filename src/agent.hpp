@@ -30,45 +30,37 @@ public:
 	// inventory;
 	bool bank_card = false;
 	bool phone     = false;
-	bool traveling = false;
 	
 	sf::Sprite sprite;
 	
-	enum
-	{
-		NORMAL = 0,
-		HIDDEN,
-	};
-	uint state = HIDDEN;
 	float amt = 1.0f;
 	
-	Agent(const sf::Texture &texture, const sf::IntRect &rectangle, uint c, Location* loc)
+	Agent(const sf::Texture &texture, const sf::IntRect &rectangle, uint c, Location* l)
 	:
-		sprite(texture, rectangle), classes{c}
+		sprite(texture, rectangle), classes{c}, loc(l)
 	{
 		auto pos = loc->sprite.getPosition();
 		sprite.setPosition(pos);
+		sprite.setOrigin({32,32});
 	}
 	
-	void update()
+	void update(bool is_traveling, Location* active_location)
 	{
-		if (traveling && state==NORMAL)
+		if (is_traveling || (loc != active_location))
 		{
 			amt -= 0.1f;
 			if (amt < 0.0f)
 			{
 				amt = 0.0f;
-				state = HIDDEN;
 			}
 			sprite.setScale(amt,amt);
 		}
-		else if (!traveling && state==HIDDEN)
+		else
 		{
 			amt += 0.1f;
 			if (amt > 1.0f)
 			{
 				amt = 1.0f;
-				state = NORMAL;
 			}
 			sprite.setScale(amt,amt);
 		}
