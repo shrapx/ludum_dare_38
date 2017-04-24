@@ -7,6 +7,7 @@
 #include "travel.hpp"
 #include "ui.hpp"
 #include "transport_button.hpp"
+#include "agent_button.hpp"
 
 #include <iostream>
 
@@ -45,8 +46,9 @@ class WorldGame : public Scene
 	// stages of game activity
 	enum
 	{
-		CHOOSE_LOCATION = 0,
+		CHOOSE_LOCATION_AGENT = 0,
 		CHOOSE_TRANSPORT,
+		CHOOSE_AGENT_OPTIONS,
 		TRAVELING,
 	};
 	int click_stage = 0;
@@ -60,7 +62,8 @@ class WorldGame : public Scene
 	std::vector<std::unique_ptr<Mission>> missions;
 	std::vector<std::unique_ptr<effect_t>> active_effects;
 	
-	std::vector<std::unique_ptr<TransportButton>> travel_buttons;
+	std::vector<std::unique_ptr<TransportButton>> transport_buttons;
+	std::vector<std::unique_ptr<AgentButton>> agent_buttons;
 	//std::vector<std::unique_ptr<TransportButton>> buttons;
 	
 	Location* to_loc = nullptr;
@@ -131,10 +134,10 @@ class WorldGame : public Scene
 		sf::Texture* buttons_tex = asset.load_texture("data/buttons.png");
 		
 		
-		travel_buttons.emplace_back(std::make_unique<TransportButton>(*buttons_tex, sf::IntRect{  0,  0,32,32}, VEHICLE_CAR));
-		travel_buttons.emplace_back(std::make_unique<TransportButton>(*buttons_tex, sf::IntRect{ 32,  0,32,32}, VEHICLE_BUS));
-		travel_buttons.emplace_back(std::make_unique<TransportButton>(*buttons_tex, sf::IntRect{ 64,  0,32,32}, VEHICLE_BOAT));
-		travel_buttons.emplace_back(std::make_unique<TransportButton>(*buttons_tex, sf::IntRect{ 96,  0,32,32}, VEHICLE_PLANE));
+		transport_buttons.emplace_back(std::make_unique<TransportButton>(*buttons_tex, sf::IntRect{  0,  0,32,32}, VEHICLE_CAR));
+		transport_buttons.emplace_back(std::make_unique<TransportButton>(*buttons_tex, sf::IntRect{ 32,  0,32,32}, VEHICLE_BUS));
+		transport_buttons.emplace_back(std::make_unique<TransportButton>(*buttons_tex, sf::IntRect{ 64,  0,32,32}, VEHICLE_BOAT));
+		transport_buttons.emplace_back(std::make_unique<TransportButton>(*buttons_tex, sf::IntRect{ 96,  0,32,32}, VEHICLE_PLANE));
 		
 		// location
 		
@@ -175,7 +178,7 @@ class WorldGame : public Scene
 		int ax = 64;
 		agents.emplace_back(std::make_unique<Agent>( *agents_tex, sf::IntRect{0,0,64,64}, Agent::TRAVEL_AGENT, UK ));
 		player = agents.back().get();
-		player->loc = UK;
+		player->sprite.setOrigin({64,32}); // make player spawn to the left side of position (others will default to right side)
 		
 		agents.emplace_back(std::make_unique<Agent>( *agents_tex, sf::IntRect{ax*1,0,64,64}, Agent::TRAVEL_AGENT, USE ));
 		agents.emplace_back(std::make_unique<Agent>( *agents_tex, sf::IntRect{ax*2,0,64,64}, Agent::TRAVEL_AGENT, EUR ));
@@ -184,6 +187,15 @@ class WorldGame : public Scene
 		agents.emplace_back(std::make_unique<Agent>( *agents_tex, sf::IntRect{ax*5,0,64,64}, Agent::TRAVEL_AGENT, SIN ));
 		agents.emplace_back(std::make_unique<Agent>( *agents_tex, sf::IntRect{ax*6,0,64,64}, Agent::TRAVEL_AGENT, CHI ));
 		agents.emplace_back(std::make_unique<Agent>( *agents_tex, sf::IntRect{ax*7,0,64,64}, Agent::TRAVEL_AGENT, HK ));
+		
+		// agent buttons
+		agent_buttons.emplace_back(std::make_unique<AgentButton>(*buttons_tex, sf::IntRect{  0, 32,32,32}, ACTION_EXPAND));
+		agent_buttons.emplace_back(std::make_unique<AgentButton>(*buttons_tex, sf::IntRect{ 32, 32,32,32}, ACTION_MEET));
+		agent_buttons.emplace_back(std::make_unique<AgentButton>(*buttons_tex, sf::IntRect{ 32, 64,32,32}, ACTION_IDEA));
+		agent_buttons.emplace_back(std::make_unique<AgentButton>(*buttons_tex, sf::IntRect{  0, 64,32,32}, ACTION_DEAL));
+		agent_buttons.emplace_back(std::make_unique<AgentButton>(*buttons_tex, sf::IntRect{ 32, 64,32,32}, ACTION_STOP));
+		agent_buttons.emplace_back(std::make_unique<AgentButton>(*buttons_tex, sf::IntRect{  0, 96,32,32}, ACTION_CALL));
+		agent_buttons.emplace_back(std::make_unique<AgentButton>(*buttons_tex, sf::IntRect{ 32, 96,32,32}, ACTION_ANSWER));
 		
 		// fg / stats
 		sf::Texture* stat_tex = asset.load_texture("data/statmeter.png");
@@ -213,13 +225,25 @@ class WorldGame : public Scene
 			{
 				switch(click_stage)
 				{
-					case CHOOSE_LOCATION:
+					case CHOOSE_LOCATION_AGENT:
 					{
 						for (auto& a : locations)
 						{
 							if (a->sprite.getGlobalBounds().contains(pointer_pos))
 							{
-								for (auto& b : travel_buttons)
+								if (a.get() == player->loc)
+								{
+									click_stage = CHOOSE_AGENT_OPTIONS;
+									
+									for (auto& a2 : agent_buttons)
+									{
+										a2->set_agent(a->agent);
+									}
+									
+									break;
+								}
+								
+								for (auto& b : transport_buttons)
 								{
 									b->set_location(player->loc, a.get());
 									to_loc = a.get();
@@ -233,7 +257,7 @@ class WorldGame : public Scene
 					
 					case CHOOSE_TRANSPORT:
 					{
-						for (auto& b : travel_buttons)
+						for (auto& b : transport_buttons)
 						{
 							if ((b->is_enabled) && b->sprite.getGlobalBounds().contains(pointer_pos))
 							{
@@ -244,20 +268,34 @@ class WorldGame : public Scene
 							}
 						}
 						
-						for (auto& b2 : travel_buttons)
+						for (auto& b2 : transport_buttons)
 						{
 							b2->clear_location();
 						}
-						click_stage = CHOOSE_LOCATION;
+						click_stage = CHOOSE_LOCATION_AGENT;
 						break;
 					}
 					
-					case TRAVELING:
+					case CHOOSE_AGENT_OPTIONS:
 					{
-						switch(mode_of_transport)
+						for (auto& a : agent_buttons)
 						{
-							// costs
+							if (a->sprite.getGlobalBounds().contains(pointer_pos))
+							{
+								// activate this from pressing button
+								
+								//chosen_button = a->val;
+								// trigger button mission
+								
+								break;
+							}
 						}
+						
+						for (auto& a : agent_buttons)
+						{
+							a->clear_agent();
+						}
+						click_stage = CHOOSE_LOCATION_AGENT;
 						break;
 					}
 				}
@@ -279,9 +317,14 @@ class WorldGame : public Scene
 			a->update(traveling, player->loc);
 		}
 		
-		for (auto& b : travel_buttons)
+		for (auto& b : transport_buttons)
 		{
 			b->update();
+		}
+		
+		for (auto& a : agent_buttons)
+		{
+			a->update();
 		}
 		
 		update_effects();
@@ -334,7 +377,9 @@ class WorldGame : public Scene
 		
 		render_texture.draw(*travel);
 		
-		for (auto& b : travel_buttons) { render_texture.draw(*b); }
+		for (auto& b : transport_buttons) { render_texture.draw(*b); }
+		
+		for (auto& b : agent_buttons) { render_texture.draw(*b); }
 		
 		// mouse
 		for (auto& s : sprites) { render_texture.draw(*s); }

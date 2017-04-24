@@ -3,10 +3,15 @@
 
 #include <vector>
 
+//forward decl
+class Agent;
+
 class Location : public sf::Drawable//, public sf::Transformable
 {
 public:
-
+	
+	Agent* agent = nullptr;
+	
 	sf::Sprite sprite;
 	
 	std::vector<Location*> roads;

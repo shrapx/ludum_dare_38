@@ -17,7 +17,7 @@ struct Mission
 	using task_t = std::pair<std::string, int>;
 	using stage_t = std::vector<task_t>;
 	std::vector<stage_t> stages;
-	
+	bool enabled = false;
 	int stage = 0;
 	int report = 0;
 	enum

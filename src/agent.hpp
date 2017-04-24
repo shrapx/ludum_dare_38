@@ -39,9 +39,10 @@ public:
 	:
 		sprite(texture, rectangle), classes{c}, loc(l)
 	{
+		loc->agent = this;
 		auto pos = loc->sprite.getPosition();
 		sprite.setPosition(pos);
-		sprite.setOrigin({32,32});
+		sprite.setOrigin({0,32}); // default
 	}
 	
 	void update(bool is_traveling, Location* active_location)
