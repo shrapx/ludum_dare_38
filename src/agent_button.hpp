@@ -11,7 +11,7 @@ public:
 	Agent* agent = nullptr;
 
 	sf::Sprite sprite;
-
+	bool is_enabled = true;
 	bool is_hiding = true;
 	float amt = 0.0f;
 	int val = 0;
@@ -60,7 +60,7 @@ public:
 		
 		if (!agent) return;
 		sf::Color c = sf::Color::White;
-		if (!agent->mission || !agent->mission->enabled)
+		if (!is_enabled)
 		{
 			c.a = 128;
 		}

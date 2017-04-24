@@ -196,6 +196,16 @@ class WorldGame : public Scene
 		agent_buttons.emplace_back(std::make_unique<AgentButton>(*buttons_tex, sf::IntRect{ 32, 64,32,32}, ACTION_STOP));
 		agent_buttons.emplace_back(std::make_unique<AgentButton>(*buttons_tex, sf::IntRect{  0, 96,32,32}, ACTION_CALL));
 		agent_buttons.emplace_back(std::make_unique<AgentButton>(*buttons_tex, sf::IntRect{ 32, 96,32,32}, ACTION_ANSWER));
+		// button missions
+		
+		/*missions.emplace_back(std::make_unique<Mission>(ACTION_EXPAND));
+		missions.emplace_back(std::make_unique<Mission>(ACTION_MEET));
+		missions.emplace_back(std::make_unique<Mission>(ACTION_IDEA));
+		missions.emplace_back(std::make_unique<Mission>(ACTION_DEAL));
+		missions.emplace_back(std::make_unique<Mission>(ACTION_STOP));
+		missions.emplace_back(std::make_unique<Mission>(ACTION_CALL));
+		missions.emplace_back(std::make_unique<Mission>(ACTION_ANSWER));*/
+		
 		
 		// fg / stats
 		sf::Texture* stat_tex = asset.load_texture("data/statmeter.png");
@@ -238,6 +248,7 @@ class WorldGame : public Scene
 									for (auto& a2 : agent_buttons)
 									{
 										a2->set_agent(a->agent);
+										a2->is_enabled = !a->action_progress[a2->val];
 									}
 									
 									break;
@@ -282,12 +293,11 @@ class WorldGame : public Scene
 						{
 							if (a->sprite.getGlobalBounds().contains(pointer_pos))
 							{
-								// activate this from pressing button
-								
-								//chosen_button = a->val;
-								// trigger button mission
-								
-								break;
+								if (a->is_enabled)
+								{
+									trigger_effect(a->agent, a->val);
+									break;
+								}
 							}
 						}
 						
@@ -345,6 +355,76 @@ class WorldGame : public Scene
 		}
 		
 		//statmeter->update(1.0f);
+	}
+	
+	void trigger_effect(Agent* agent, int move)
+	{
+		int cost = 0;
+		switch (move)
+		{
+			case ACTION_EXPAND: cost = 200; break;
+			case ACTION_CALL:   cost = 100; break;
+			case ACTION_ANSWER: cost = 250; break;
+			case ACTION_MEET:   cost = 500; break;
+			case ACTION_DEAL:   cost = 1000; break;
+		}
+		
+		if ( (int)persist.stats.stat[STAT_MONEY] < cost) return; // cancel if its too expensive
+		
+		stats_t& a = persist.stats;
+		stats_t& b = agent->stats;
+		
+		if (player->loc->action_progress[move]) return; // cancel if its already completed
+		
+		switch (move)
+		{
+			case ACTION_EXPAND:
+			{
+				active_effects.emplace_back(std::make_unique<effect_t>(a, b));
+				auto& e = active_effects.back();
+				e->strategy_a = STAT_MONEY;
+				e->strategy_b = STAT_MONEY;
+				e->countdown = cost;
+				e->factor_a = -1;
+				e->factor_b = +1;
+				break;
+			}
+			case ACTION_CALL:
+			case ACTION_DEAL:
+			case ACTION_MEET:
+			{
+				if (stats_t::compare(a,b)) // won
+				{
+					a.stat[a.strategy]+=1;
+					
+					active_effects.emplace_back(std::make_unique<effect_t>(a, b));
+					auto& e = active_effects.back();
+					e->strategy_a = STAT_MONEY;
+					e->strategy_b = STAT_MONEY;
+					e->countdown = cost;
+					e->factor_a = +1;
+					e->factor_b = -1;
+				}
+				else // lost
+				{
+					a.stat[a.strategy]+=1;
+					
+					active_effects.emplace_back(std::make_unique<effect_t>(a, b));
+					auto& e = active_effects.back();
+					e->strategy_a = STAT_MONEY;
+					e->strategy_b = STAT_MONEY;
+					e->countdown = cost;
+					e->factor_a = -1;
+					e->factor_b = +1;
+				}
+				break;
+			}
+			case ACTION_IDEA:
+				a.stat[a.strategy]+=1;
+				break;
+		}
+		
+		player->loc->action_progress[move] = true;
 	}
 	
 	void end_scene()

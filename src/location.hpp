@@ -19,12 +19,13 @@ public:
 	
 	//Mission* card = nullptr;
 	
-	bool visited = false;
+	std::array<bool,ACTION_COUNT> action_progress;
 	
 	Location(const sf::Texture &texture, const sf::IntRect &rectangle, const sf::Vector2f& origin)
 	:
 		sprite(texture, rectangle)
 	{
+		action_progress.fill(false);
 		sprite.setOrigin(origin);
 		sprite.setPosition(rectangle.left + origin.x, rectangle.top + origin.y);
 		sprite.setColor({255,255,128,255});

@@ -15,7 +15,7 @@ public:
 	const sf::Font& font;
 	const sf::Texture &texture;
 	
-	std::array<std::unique_ptr<StatMeter>, stats_t::COUNT> meters;
+	std::array<std::unique_ptr<StatMeter>, STAT_COUNT> meters;
 	sf::Sprite endcap;
 		
 
@@ -23,13 +23,13 @@ public:
 	UI(const Persist& p, const sf::Font& f, const sf::Texture &t) : persist(p), font(f), texture(t), endcap(texture)
 	{
 		//meters.emplace_back();
-		meters[stats_t::CHARISMA] = std::make_unique<StatMeter>(f, t, "CHARISMA");
-		meters[stats_t::WILL]     = std::make_unique<StatMeter>(f, t, "WILL");
-		meters[stats_t::INTEL]    = std::make_unique<StatMeter>(f, t, "INTEL");
-		meters[stats_t::ECONOMY]  = std::make_unique<StatMeter>(f, t, "TRADE");
-		meters[stats_t::ENERGY]   = std::make_unique<StatMeter>(f, t, "ENERGY");
-		meters[stats_t::MONEY]    = std::make_unique<StatMeter>(f, t, "MONEY");
-		meters[stats_t::CREDIT]   = std::make_unique<StatMeter>(f, t, "CREDIT"); 
+		meters[STAT_CHARISMA] = std::make_unique<StatMeter>(f, t, "CHARISMA");
+		meters[STAT_WILL]     = std::make_unique<StatMeter>(f, t, "WILL");
+		meters[STAT_INTEL]    = std::make_unique<StatMeter>(f, t, "INTEL");
+		meters[STAT_ECONOMY]  = std::make_unique<StatMeter>(f, t, "TRADE");
+		meters[STAT_ENERGY]   = std::make_unique<StatMeter>(f, t, "ENERGY");
+		meters[STAT_MONEY]    = std::make_unique<StatMeter>(f, t, "MONEY");
+		meters[STAT_CREDIT]   = std::make_unique<StatMeter>(f, t, "CREDIT"); 
 		
 		int y = -ZOOM_HH;
 		for (auto& m : meters)

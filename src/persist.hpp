@@ -16,16 +16,29 @@ enum
 enum 
 {
 	ACTION_NONE = 0,
+	ACTION_VISIT,
 	ACTION_EXPAND,
 	ACTION_MEET,
 	ACTION_IDEA,
 	ACTION_DEAL,
+	ACTION_REST,
 	ACTION_STOP,
 	ACTION_CALL,
 	ACTION_ANSWER,
 	ACTION_COUNT
 };
 	
+enum
+{
+	STAT_CHARISMA=0, // stats
+	STAT_WILL,
+	STAT_INTEL,
+	STAT_ECONOMY,
+	STAT_ENERGY, // pools
+	STAT_MONEY,
+	STAT_CREDIT,
+	STAT_COUNT
+};
 class stat_t
 {
 public:
@@ -65,20 +78,9 @@ public:
 
 struct stats_t
 {
-	enum
-	{
-		CHARISMA=0, // stats
-		WILL,
-		INTEL,
-		ECONOMY,
-		ENERGY, // pools
-		MONEY,
-		CREDIT,
-		COUNT
-	};
 	
-	int strategy = CHARISMA;
-	std::array<stat_t,COUNT> stat;
+	int strategy = STAT_CHARISMA;
+	std::array<stat_t,STAT_COUNT> stat;
 	
 	static bool compare(const stats_t& a, const stats_t& b)
 	{
@@ -102,16 +104,20 @@ struct effect_t
 	int factor_a = -1;
 	int factor_b = +1;
 	int countdown = 100;
-	bool early_exit = false;
+	//bool early_exit = false;
 	bool remove_me = false;
-	//sf::Time duration;
+	bool forever = false;
 	
 	void update()
 	{
 		a.stat[strategy_a] += factor_a;
 		b.stat[strategy_b] += factor_b;
+		
+		if (forever) return;
+		
 		--countdown;
 		remove_me = countdown < 0;
+		
 	}
 	// intelligence += everything
 	// ..CHARISMA > WILLPOWER > MONEY > CHARISMA..
@@ -137,13 +143,13 @@ struct Persist
 		std::cout << r1 << std::endl;
 		std::cout << r2 << std::endl;
 		std::cout << r3 << std::endl;
-		stats.stat[stats_t::CHARISMA] = {0, 100, 10+r1};
-		stats.stat[stats_t::WILL]     = {0, 100, 10+r2};
-		stats.stat[stats_t::INTEL]    = {0, 100, 20-r2};
-		stats.stat[stats_t::ECONOMY]  = {0, 100, 20-r1};
-		stats.stat[stats_t::ENERGY]   = {0, 100, 100  };
-		stats.stat[stats_t::MONEY]    = {0, 10000,  500+r3};
-		stats.stat[stats_t::CREDIT]   = {0, 10000, 1000-r3};
+		stats.stat[STAT_CHARISMA] = {0, 100, 10+r1};
+		stats.stat[STAT_WILL]     = {0, 100, 10+r2};
+		stats.stat[STAT_INTEL]    = {0, 100, 20-r2};
+		stats.stat[STAT_ECONOMY]  = {0, 100, 20-r1};
+		stats.stat[STAT_ENERGY]   = {0, 100, 100  };
+		stats.stat[STAT_MONEY]    = {0, 10000,  500+r3};
+		stats.stat[STAT_CREDIT]   = {0, 10000, 1000-r3};
 	}
 };
 
