@@ -64,15 +64,15 @@ class WorldGame : public Scene
 	
 	std::vector<std::unique_ptr<TransportButton>> transport_buttons;
 	std::vector<std::unique_ptr<AgentButton>> agent_buttons;
-	//std::vector<std::unique_ptr<TransportButton>> buttons;
 	
 	Location* to_loc = nullptr;
 	
-	//std::vector<std::unique_ptr<StatMeter>> statmeters;
 	std::unique_ptr<UI> ui;
 	
 	std::unique_ptr<Travel> travel;
 	Agent* player = nullptr;
+	int energy_drain = 0;
+	int energy_drain_every = 50;
 	
 	bool traveling = false;
 	
@@ -191,9 +191,10 @@ class WorldGame : public Scene
 		// agent buttons
 		agent_buttons.emplace_back(std::make_unique<AgentButton>(*buttons_tex, sf::IntRect{  0, 32,32,32}, ACTION_EXPAND));
 		agent_buttons.emplace_back(std::make_unique<AgentButton>(*buttons_tex, sf::IntRect{ 32, 32,32,32}, ACTION_MEET));
-		agent_buttons.emplace_back(std::make_unique<AgentButton>(*buttons_tex, sf::IntRect{ 32, 64,32,32}, ACTION_IDEA));
+		agent_buttons.emplace_back(std::make_unique<AgentButton>(*buttons_tex, sf::IntRect{ 64, 32,32,32}, ACTION_IDEA));
 		agent_buttons.emplace_back(std::make_unique<AgentButton>(*buttons_tex, sf::IntRect{  0, 64,32,32}, ACTION_DEAL));
 		agent_buttons.emplace_back(std::make_unique<AgentButton>(*buttons_tex, sf::IntRect{ 32, 64,32,32}, ACTION_STOP));
+		agent_buttons.emplace_back(std::make_unique<AgentButton>(*buttons_tex, sf::IntRect{ 64, 64,32,32}, ACTION_REST));
 		agent_buttons.emplace_back(std::make_unique<AgentButton>(*buttons_tex, sf::IntRect{  0, 96,32,32}, ACTION_CALL));
 		agent_buttons.emplace_back(std::make_unique<AgentButton>(*buttons_tex, sf::IntRect{ 32, 96,32,32}, ACTION_ANSWER));
 		// button missions
@@ -218,6 +219,8 @@ class WorldGame : public Scene
 	
 	void update()
 	{
+		if ( (energy_drain++ % energy_drain_every) == 0) persist.stats.stat[STAT_ENERGY]-=1;
+			
 		sf::Vector2f target = (traveling) ? travel->pos : player->sprite.getPosition();
 		
 		view.setCenter(target);
@@ -362,6 +365,7 @@ class WorldGame : public Scene
 		int cost = 0;
 		switch (move)
 		{
+			case ACTION_REST:   cost = 50; break;
 			case ACTION_EXPAND: cost = 200; break;
 			case ACTION_CALL:   cost = 100; break;
 			case ACTION_ANSWER: cost = 250; break;
@@ -378,15 +382,33 @@ class WorldGame : public Scene
 		
 		switch (move)
 		{
+			case ACTION_REST:
+			{
+				//cost = std::min( (int)persist.stats.stat[STAT_ENERGY], cost);
+				{
+					active_effects.emplace_back(std::make_unique<effect_t>(a));
+					auto& e = active_effects.back();
+					e->strategy_a = STAT_MONEY;
+					e->countdown = cost;
+					e->factor_a = -1;
+				}
+				{
+					active_effects.emplace_back(std::make_unique<effect_t>(a));
+					auto& e = active_effects.back();
+					e->strategy_a = STAT_ENERGY;
+					e->countdown = cost;
+					e->factor_a = +1;
+				}
+				break;
+			}
+			
 			case ACTION_EXPAND:
 			{
-				active_effects.emplace_back(std::make_unique<effect_t>(a, b));
+				active_effects.emplace_back(std::make_unique<effect_t>(a));
 				auto& e = active_effects.back();
 				e->strategy_a = STAT_MONEY;
-				e->strategy_b = STAT_MONEY;
 				e->countdown = cost;
 				e->factor_a = -1;
-				e->factor_b = +1;
 				break;
 			}
 			case ACTION_CALL:
@@ -397,25 +419,21 @@ class WorldGame : public Scene
 				{
 					a.stat[a.strategy]+=1;
 					
-					active_effects.emplace_back(std::make_unique<effect_t>(a, b));
+					active_effects.emplace_back(std::make_unique<effect_t>(a));
 					auto& e = active_effects.back();
 					e->strategy_a = STAT_MONEY;
-					e->strategy_b = STAT_MONEY;
 					e->countdown = cost;
 					e->factor_a = +1;
-					e->factor_b = -1;
 				}
 				else // lost
 				{
 					a.stat[a.strategy]+=1;
 					
-					active_effects.emplace_back(std::make_unique<effect_t>(a, b));
+					active_effects.emplace_back(std::make_unique<effect_t>(a));
 					auto& e = active_effects.back();
 					e->strategy_a = STAT_MONEY;
-					e->strategy_b = STAT_MONEY;
 					e->countdown = cost;
 					e->factor_a = -1;
-					e->factor_b = +1;
 				}
 				break;
 			}

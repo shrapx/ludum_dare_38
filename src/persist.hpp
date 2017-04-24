@@ -71,7 +71,7 @@ public:
 	stat_t& operator-=(int i)
 	{
 		 amt -= i;
-		 if (amt > min) amt = min;
+		 if (amt < min) amt = min;
 		 return *this;
 	}
 };
@@ -95,29 +95,23 @@ struct stats_t
 struct effect_t
 {
 	stats_t& a;
-	stats_t& b;
 	
-	effect_t(stats_t& a, stats_t& b) : a(a),b(b) {}
+	effect_t(stats_t& a) : a(a) {}
 	
 	int strategy_a = 0;
-	int strategy_b = 0;
 	int factor_a = -1;
-	int factor_b = +1;
 	int countdown = 100;
-	//bool early_exit = false;
 	bool remove_me = false;
 	bool forever = false;
 	
 	void update()
 	{
 		a.stat[strategy_a] += factor_a;
-		b.stat[strategy_b] += factor_b;
 		
 		if (forever) return;
 		
 		--countdown;
 		remove_me = countdown < 0;
-		
 	}
 	// intelligence += everything
 	// ..CHARISMA > WILLPOWER > MONEY > CHARISMA..
