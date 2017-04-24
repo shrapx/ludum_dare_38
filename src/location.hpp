@@ -25,18 +25,38 @@ public:
 		sprite.setColor({255,255,128,255});
 	}
 	
-	int get_mode_of_transport(Location* other) const
+	bool can_transport(Location* other, int val) const
+	{
+		switch (val)
+		{
+			case VEHICLE_CAR:  return can_car(other);
+			case VEHICLE_BOAT: return can_boat(other);
+			case VEHICLE_PLANE: return true;
+		}
+	}
+	
+	bool can_car(Location* other) const
 	{
 		for (auto& r : roads)
 		{
-			if (r == other) return VEHICLE_CAR;
+			if (r == other) return true;
 		}
-		
+		return false;
+	}
+	
+	bool can_boat(Location* other) const
+	{
 		for (auto& s : seas)
 		{
-			if (s == other) return VEHICLE_BOAT;
+			if (s == other) return true;
 		}
-		
+		return false;
+	}
+	
+	int get_mode_of_transport(Location* other) const
+	{
+		if (can_car(other)) return VEHICLE_CAR;
+		if (can_boat(other)) return VEHICLE_BOAT;
 		return VEHICLE_PLANE;
 	}
 	

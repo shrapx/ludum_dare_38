@@ -7,7 +7,7 @@ class Travel : public sf::Drawable, public sf::Transformable
 {
 public:
 
-	int vehicle = VEHICLE_CAR;
+	int transport = VEHICLE_CAR;
 	
 	Location* from;
 	Location* to;
@@ -28,34 +28,38 @@ public:
 	
 	Travel(const sf::Texture &texture) : vehicle_sprite(texture)
 	{
-		
 	}
 	
 	void set_destination(Location* f, Location* t)
 	{
+		int v = f->get_mode_of_transport(t);
+		set_destination(f,t,v);
+	}
+	
+	void set_destination(Location* f, Location* t, int v)
+	{
 		from = f;
 		to = t;
-		int v = f->get_mode_of_transport(t);
+		transport = v;
+		
+		set_vehicle(v);
 		
 		pos_from = pos;
 		pos_to = t->sprite.getPosition();
 		
-		int tmod = 1;
-		
-		switch(v)
+		float tmod;
+		switch(transport)
 		{
-			case VEHICLE_PLANE: tmod = 1; break;
-			case VEHICLE_BOAT:  tmod = 2; break;
-			case VEHICLE_CAR:   tmod = 3; break;
-			case VEHICLE_BUS:   tmod = 4; break;
+			case VEHICLE_CAR:   tmod = 2; break;
+			case VEHICLE_BOAT:  tmod = 1.5; break;
+			case VEHICLE_BUS:   tmod = 1; break;
+			
+			case VEHICLE_PLANE: tmod = 0.5; break;
 		}
 		
 		int d = dist(pos_from, pos_to) * tmod;
-		
 		time_total = d;
 		time_left = d + time_fade;
-		
-		set_vehicle(v);
 		
 		vehicle_sprite.setOrigin({60,32});
 		vehicle_sprite.setPosition(pos_from);
@@ -143,13 +147,13 @@ private:
 	
 	void set_vehicle(int v)
 	{
-		vehicle = v;
+		transport = v;
 		switch(v)
 		{
-			case VEHICLE_PLANE: vehicle_sprite.setTextureRect({ 0,  0, 64, 64}); break;
-			case VEHICLE_CAR:   vehicle_sprite.setTextureRect({64,  0, 64, 64}); break;
-			case VEHICLE_BOAT:  vehicle_sprite.setTextureRect({ 0,  0, 64, 64}); break;
-			case VEHICLE_BUS:  vehicle_sprite.setTextureRect( {64, 64, 64, 64}); break;
+			case VEHICLE_CAR:   vehicle_sprite.setTextureRect({ 0,  0, 64, 64}); break;
+			case VEHICLE_BUS:  vehicle_sprite.setTextureRect( {64,  0, 64, 64}); break;
+			case VEHICLE_BOAT:  vehicle_sprite.setTextureRect({ 0, 64, 64, 64}); break;
+			case VEHICLE_PLANE: vehicle_sprite.setTextureRect({64, 64, 64, 64}); break;
 		}
 		vehicle_sprite.setOrigin(32,32);
 	}

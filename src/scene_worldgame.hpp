@@ -6,6 +6,7 @@
 #include "agent.hpp"
 #include "travel.hpp"
 #include "ui.hpp"
+#include "radial.hpp"
 
 #include <iostream>
 
@@ -41,6 +42,16 @@ class WorldGame : public Scene
 		return false;
 	}
 	
+	// stages of game activity
+	enum
+	{
+		CHOOSE_LOCATION = 0,
+		CHOOSE_TRANSPORT,
+		TRAVELING,
+	};
+	int click_stage = 0;
+	int mode_of_transport = 0;
+	
 	sf::Clock clock;
 	sf::Time next;
 	
@@ -48,6 +59,11 @@ class WorldGame : public Scene
 	std::vector<std::unique_ptr<Agent>> agents;
 	std::vector<std::unique_ptr<Mission>> missions;
 	std::vector<std::unique_ptr<effect_t>> active_effects;
+	
+	std::vector<std::unique_ptr<RadialButton>> travel_buttons;
+	//std::vector<std::unique_ptr<RadialButton>> buttons;
+	
+	Location* to_loc = nullptr;
 	
 	//std::vector<std::unique_ptr<StatMeter>> statmeters;
 	std::unique_ptr<UI> ui;
@@ -111,16 +127,21 @@ class WorldGame : public Scene
 		sf::Texture* travel_tex = asset.load_texture("data/travel.png");
 		travel = std::make_unique<Travel>(*travel_tex);
 		
+		// location buttons
+		sf::Texture* buttons_tex = asset.load_texture("data/buttons.png");
+		
+		
+		travel_buttons.emplace_back(std::make_unique<RadialButton>(*buttons_tex, sf::IntRect{  0,  0,32,32}, VEHICLE_CAR));
+		travel_buttons.emplace_back(std::make_unique<RadialButton>(*buttons_tex, sf::IntRect{ 32,  0,32,32}, VEHICLE_BUS));
+		travel_buttons.emplace_back(std::make_unique<RadialButton>(*buttons_tex, sf::IntRect{ 64,  0,32,32}, VEHICLE_BOAT));
+		travel_buttons.emplace_back(std::make_unique<RadialButton>(*buttons_tex, sf::IntRect{ 96,  0,32,32}, VEHICLE_PLANE));
+		
 		// location
 		
 		sf::Texture* loc_tex1 = asset.load_texture("data/locations1.png");
 		sf::Texture* loc_tex2 = asset.load_texture("data/locations2.png");
 		
-		Location* UK = add_location(*loc_tex1, {373,131,38,39}, {29,35}); // UK
-		
-		//travel->pos = {373,177};
-		
-		
+		Location* UK  = add_location(*loc_tex1, {373,131,38,39}, {29,35}); // UK
 		Location* USW = add_location(*loc_tex1, {206,177,38,74}, {20,24}); // USA west
 		Location* USE = add_location(*loc_tex1, {101,172,36,62}, {11,24}); // USA east
 		Location* UAE = add_location(*loc_tex1, {538,240,24,17}, {16,6}); // UAE
@@ -152,15 +173,14 @@ class WorldGame : public Scene
 		add_location(*loc_tex2, {}, {}); //
 		*/
 		
-		
 		// agent
 		
 		sf::Texture* agents_tex = asset.load_texture("data/agents.png");
 
 		player = add_agent(*agents_tex, {0,0,64,64}, Agent::TRAVEL_AGENT, UK);
 		player->loc = UK;
-		// fg / stats
 		
+		// fg / stats
 		sf::Texture* stat_tex = asset.load_texture("data/statmeter.png");
 		
 		ui = std::make_unique<UI>(persist, *font, *stat_tex);
@@ -182,13 +202,78 @@ class WorldGame : public Scene
 		sf::Vector2f pointer_pos = target + (sf::Vector2f{input.mouse}/ZOOM) - sf::Vector2f(ZOOM_WH, ZOOM_HH);
 		mouse_pointer_sprite->setPosition(pointer_pos);
 		
-		if (click(input.get_command.at(0).at("click")))
+		if (!travel->traveling)
 		{
-			look_for_click(pointer_pos);
+			if (click(input.get_command.at(0).at("click")))
+			{
+				switch(click_stage)
+				{
+					case CHOOSE_LOCATION:
+					{
+						for (auto& a : locations)
+						{
+							if (a->sprite.getGlobalBounds().contains(pointer_pos))
+							{
+								for (auto& b : travel_buttons)
+								{
+									b->set_location(player->loc, a.get());
+									to_loc = a.get();
+								}
+								click_stage = CHOOSE_TRANSPORT;
+								break;
+							}
+						}
+						break;
+					}
+					
+					case CHOOSE_TRANSPORT:
+					{
+						for (auto& b : travel_buttons)
+						{
+							if ((b->is_enabled) && b->sprite.getGlobalBounds().contains(pointer_pos))
+							{
+								// activate this from pressing button
+								travel->set_destination(player->loc, to_loc, b->val);
+								mode_of_transport = b->val;
+								break;
+							}
+						}
+						
+						for (auto& b2 : travel_buttons)
+						{
+							b2->clear_location();
+						}
+						click_stage = CHOOSE_LOCATION;
+						break;
+					}
+					
+					case TRAVELING:
+					{
+						switch(mode_of_transport)
+						{
+							// costs
+						}
+						break;
+					}
+				}
+				// replace with options around character
+				/*for (auto& a : agents)
+				{
+					if (a->sprite.getGlobalBounds().contains(pos))
+					{
+						return;
+					}
+				}*/
+			}
 		}
 		
 		travel->update();
 		player->update();
+		
+		for (auto& b : travel_buttons)
+		{
+			b->update();
+		}
 		
 		update_effects();
 		
@@ -199,6 +284,7 @@ class WorldGame : public Scene
 			player->sprite.setPosition(travel->pos);
 			player->traveling = false;
 			player->loc = travel->to;
+			
 		}
 		else if (!traveling && travel->traveling)
 		{
@@ -213,32 +299,6 @@ class WorldGame : public Scene
 	{
 		++persist.scene;
 		persist.scene_end = true;
-	}
-	
-	void look_for_click(const sf::Vector2f& pos)
-	{
-		// replace with options around character
-		/*for (auto& a : agents)
-		{
-			if (a->sprite.getGlobalBounds().contains(pos))
-			{
-				return;
-			}
-		}*/
-		
-		// options around selected location before travel ?
-		
-		for (auto& a : locations)
-		{
-			if (a->sprite.getGlobalBounds().contains(pos))
-			{
-				if (!travel->traveling)
-				{
-					travel->set_destination(player->loc, a.get());
-				}
-				return;
-			}
-		}
 	}
 	
 	void update_effects()
@@ -266,6 +326,7 @@ class WorldGame : public Scene
 		for (auto& a : agents   ) { render_texture.draw(*a); }
 		
 		for (auto& s : sprites) { render_texture.draw(*s); }
+		for (auto& b : travel_buttons) { render_texture.draw(*b); }
 		
 		render_texture.draw(*ui);
 		

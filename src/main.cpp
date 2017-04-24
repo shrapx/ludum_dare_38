@@ -15,20 +15,21 @@
 
 #define FADE 30
 
+const sf::VideoMode VIDEO_MODE(SCREEN_W, SCREEN_H);
+
 #include "sfml_math_extra.hpp"
 
 #include "timer.hpp"
 #include "input.hpp"
 #include "persist.hpp"
 
-//#include "scene_menu.hpp"
 #include "scene_worldgame.hpp"
 
 #include <string>
 #include <unordered_map>
 #include <memory>
 
-const sf::VideoMode VIDEO_MODE(SCREEN_W, SCREEN_H);
+
 
 int main()
 {

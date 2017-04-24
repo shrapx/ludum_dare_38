@@ -39,7 +39,7 @@ public:
 		NORMAL = 0,
 		HIDDEN,
 	};
-	uint state = NORMAL;
+	uint state = HIDDEN;
 	float amt = 1.0f;
 	
 	Agent(const sf::Texture &texture, const sf::IntRect &rectangle, uint c, Location* loc)
