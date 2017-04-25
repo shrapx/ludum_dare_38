@@ -23,6 +23,7 @@ const sf::VideoMode VIDEO_MODE(SCREEN_W, SCREEN_H);
 #include "input.hpp"
 #include "persist.hpp"
 
+//#include "scene_menu.hpp"
 #include "scene_worldgame.hpp"
 
 #include <string>

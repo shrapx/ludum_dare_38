@@ -8,6 +8,7 @@
 
 class SelectBox : public sf::Sprite
 {
+public:
 	using Sprite::Sprite;
 	
 	SelectBox* u = nullptr;

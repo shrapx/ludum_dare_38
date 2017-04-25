@@ -32,7 +32,6 @@ class WorldGame : public Scene
 			if (click_in)
 			{
 				mouse_click = true;
-				sound_click->play();
 				return true;
 			}
 		}
@@ -219,8 +218,23 @@ class WorldGame : public Scene
 	
 	void update()
 	{
-		if ( (energy_drain++ % energy_drain_every) == 0) persist.stats.stat[STAT_ENERGY]-=1;
-			
+		if ( (energy_drain++ % energy_drain_every) == 0)
+		{
+			int energy = persist.stats.stat[STAT_ENERGY];
+			if (energy > 0)
+			{
+				persist.stats.stat[STAT_ENERGY]-=1;
+			}
+			else
+			{
+				// lose condition
+				++persist.scene;
+				persist.scene_end = true;
+				
+				return;
+			}
+		}
+		
 		sf::Vector2f target = (traveling) ? travel->pos : player->sprite.getPosition();
 		
 		view.setCenter(target);
@@ -253,7 +267,7 @@ class WorldGame : public Scene
 										a2->set_agent(a->agent);
 										a2->is_enabled = !a->action_progress[a2->val];
 									}
-									
+									sound_click->play();
 									break;
 								}
 								
@@ -262,6 +276,7 @@ class WorldGame : public Scene
 									b->set_location(player->loc, a.get());
 									to_loc = a.get();
 								}
+								sound_click->play();
 								click_stage = CHOOSE_TRANSPORT;
 								break;
 							}
@@ -278,6 +293,7 @@ class WorldGame : public Scene
 								// activate this from pressing button
 								travel->set_destination(player->loc, to_loc, b->val);
 								mode_of_transport = b->val;
+								sound_click->play();
 								break;
 							}
 						}
@@ -299,6 +315,7 @@ class WorldGame : public Scene
 								if (a->is_enabled)
 								{
 									trigger_effect(a->agent, a->val);
+									sound_click->play();
 									break;
 								}
 							}

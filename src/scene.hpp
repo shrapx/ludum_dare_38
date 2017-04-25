@@ -18,7 +18,7 @@ public:
 	sf::RenderTexture render_texture;
 	sf::View view;
 	sf::Sprite sprite;
-	sf::Color clear_colour = sf::Color(32,224,224);
+	sf::Color clear_colour = sf::Color(110,149,181);
 	
 	bool advance = false;
 	

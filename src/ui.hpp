@@ -45,7 +45,7 @@ public:
 	void update()
 	{
 		counter++;
-		float fluctuate = sin(counter*0.02f) * 0.025f;
+		float fluctuate = sin(counter*0.1f) * 0.01f;
 		
 		
 		int strategy = 0;
